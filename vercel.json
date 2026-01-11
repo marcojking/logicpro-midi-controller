@@ -1,9 +1,6 @@
 {
+    "cleanUrls": true,
     "rewrites": [
-        {
-            "source": "/mobile",
-            "destination": "/public/mobile.html"
-        },
         {
             "source": "/(.*)",
             "destination": "/public/$1"
