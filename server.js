@@ -4,6 +4,21 @@ const socketIO = require('socket.io');
 const osc = require('osc');
 const os = require('os');
 
+// Parse command line arguments
+const args = process.argv.slice(2);
+const getArg = (flag, defaultVal) => {
+  const idx = args.indexOf(flag);
+  return idx !== -1 && args[idx + 1] ? args[idx + 1] : defaultVal;
+};
+
+// Configuration
+const CONFIG = {
+  port: parseInt(getArg('--port', '3000')),
+  oscTargetIP: getArg('--osc-ip', '127.0.0.1'),  // Mac's IP address
+  oscTargetPort: parseInt(getArg('--osc-port', '9000')),
+  midiChannel: parseInt(getArg('--midi-channel', '1'))
+};
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
@@ -77,22 +92,46 @@ function logMessage(message) {
   return logEntry;
 }
 
-// Send OSC message
+// Send OSC message for slider (legacy format)
 function sendOSC(slider) {
   try {
+    // Send to the configured remote Mac
     oscPort.send({
-      address: slider.oscAddress,
+      address: `/slider/${slider.id}`,
       args: [{ type: "f", value: slider.value }]
-    }, slider.oscTargetIP, slider.oscTargetPort);
+    }, CONFIG.oscTargetIP, CONFIG.oscTargetPort);
 
-    const logEntry = logMessage(`OSC → ${slider.oscAddress}: ${slider.value.toFixed(3)}`);
+    // Also send as MIDI CC format
+    const ccValue = Math.round(slider.value * 127);
+    oscPort.send({
+      address: "/midi/cc",
+      args: [
+        { type: "i", value: CONFIG.midiChannel },
+        { type: "i", value: slider.id },  // CC number = slider ID
+        { type: "i", value: ccValue }
+      ]
+    }, CONFIG.oscTargetIP, CONFIG.oscTargetPort);
 
-    // Broadcast log entry to all clients
+    const logEntry = logMessage(`OSC → Slider ${slider.id}: ${ccValue}`);
     io.emit('logUpdate', logEntry);
 
-    console.log(`[OSC] ${slider.oscAddress} → ${slider.value.toFixed(3)} (${slider.oscTargetIP}:${slider.oscTargetPort})`);
+    console.log(`[OSC] Slider ${slider.id} → ${ccValue} (${CONFIG.oscTargetIP}:${CONFIG.oscTargetPort})`);
   } catch (error) {
     console.error('OSC Send Error:', error);
+  }
+}
+
+// Send transport control OSC
+function sendTransportOSC(action, value) {
+  try {
+    oscPort.send({
+      address: `/transport/${action}`,
+      args: [{ type: "i", value: value }]
+    }, CONFIG.oscTargetIP, CONFIG.oscTargetPort);
+
+    console.log(`[OSC] Transport ${action} → ${value}`);
+  } catch (error) {
+    console.error('OSC Transport Error:', error);
   }
 }
 
@@ -143,6 +182,15 @@ io.on('connection', (socket) => {
       id,
       value: clampedValue
     });
+  });
+
+  // Handle transport control
+  socket.on('transport', (data) => {
+    const { action, value } = data;
+    sendTransportOSC(action, value ? 127 : 0);
+
+    // Broadcast to other clients
+    io.emit('transportUpdate', { action, value });
   });
 
   // Handle configuration updates
@@ -206,18 +254,20 @@ function getLocalIP() {
 }
 
 // Start server
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => {
+server.listen(CONFIG.port, '0.0.0.0', () => {
   const localIP = getLocalIP();
 
   console.log('\n========================================');
-  console.log('   OSC Control Dashboard');
+  console.log('   MIDI Controller for Logic Pro');
   console.log('========================================');
-  console.log(`Computer:  http://localhost:${PORT}`);
-  console.log(`Mobile:    http://${localIP}:${PORT}/mobile.html`);
+  console.log(`Dashboard:  http://localhost:${CONFIG.port}`);
+  console.log(`Mobile:     http://${localIP}:${CONFIG.port}/mobile.html`);
+  console.log('----------------------------------------');
+  console.log(`OSC Target: ${CONFIG.oscTargetIP}:${CONFIG.oscTargetPort}`);
+  console.log(`MIDI Ch:    ${CONFIG.midiChannel}`);
   console.log('========================================');
-  console.log(`Connected clients: 0`);
-  console.log(`OSC Port: ${oscPort.options.localPort}`);
+  console.log('\nUsage: node server.js --osc-ip <MAC_IP>');
+  console.log('Example: node server.js --osc-ip 192.168.1.50');
   console.log('========================================\n');
 });
 
