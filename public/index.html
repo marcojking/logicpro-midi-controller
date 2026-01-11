@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MIDI Controller for Logic Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/controller.css">
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div>
+        <div class="logo">MIDI Controller</div>
+        <div class="logo-sub">for Logic Pro</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-group">
+        <div class="status-item">
+          <span class="status-dot" id="midiStatus"></span>
+          <span id="midiStatusText">MIDI: Not Connected</span>
+        </div>
+        <div class="status-item">
+          <span class="status-dot" id="phoneStatus"></span>
+          <span id="phoneStatusText">Phone: Not Connected</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-container">
+    <!-- Transport Controls (for recording) -->
+    <section class="transport-section">
+      <div class="section-header">
+        <h2 class="section-title">Transport</h2>
+      </div>
+      <div class="transport-controls">
+        <!-- Primary Transport -->
+        <div class="transport-group transport-primary">
+          <button class="transport-btn record-btn" id="btnRecord" data-action="record" title="Record (CC 116)">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="12" r="8" />
+            </svg>
+            <span>Record</span>
+          </button>
+          <button class="transport-btn play-btn" id="btnPlay" data-action="play" title="Play/Stop (CC 117)">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5,3 19,12 5,21" />
+            </svg>
+            <span>Play</span>
+          </button>
+          <button class="transport-btn stop-btn" id="btnStop" data-action="stop" title="Stop (CC 118)">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <rect x="4" y="4" width="16" height="16" rx="2" />
+            </svg>
+            <span>Stop</span>
+          </button>
+          <button class="transport-btn rewind-btn" id="btnRewind" data-action="rewind" title="Return to Zero (CC 119)">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M11 18V6l-8 6 8 6zm.5-6l8 6V6l-8 6z" />
+            </svg>
+            <span>Start</span>
+          </button>
+        </div>
+
+        <!-- Secondary Controls -->
+        <div class="transport-group transport-secondary">
+          <button class="transport-btn undo-btn" id="btnUndo" data-action="undo" title="Undo (CC 120)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M3 10h10a5 5 0 0 1 5 5v2" />
+              <polyline points="3,10 7,6" />
+              <polyline points="3,10 7,14" />
+            </svg>
+            <span>Undo</span>
+          </button>
+          <button class="transport-btn toggle-btn" id="btnLoop" data-action="loop" title="Cycle/Loop (CC 121)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M17 2l4 4-4 4" />
+              <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
+              <path d="M7 22l-4-4 4-4" />
+              <path d="M21 13v1a4 4 0 0 1-4 4H3" />
+            </svg>
+            <span>Loop</span>
+          </button>
+          <button class="transport-btn toggle-btn" id="btnClick" data-action="click" title="Metronome (CC 122)">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 1.5l-8 10v11h16v-11l-8-10zM12 4.5l5.5 7H6.5l5.5-7zM6 20v-6h12v6H6z" />
+              <rect x="11" y="6" width="2" height="8" />
+            </svg>
+            <span>Click</span>
+          </button>
+          <button class="transport-btn marker-btn" id="btnMarker" data-action="marker" title="Drop Marker (CC 123)">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+            </svg>
+            <span>Marker</span>
+          </button>
+        </div>
+
+        <!-- Navigation -->
+        <div class="transport-group transport-nav">
+          <button class="transport-btn nav-btn" id="btnPrevMarker" data-action="prevMarker"
+            title="Previous Marker (CC 124)">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="11,12 22,5 22,19" />
+              <rect x="2" y="5" width="4" height="14" />
+            </svg>
+            <span>Prev</span>
+          </button>
+          <button class="transport-btn nav-btn" id="btnNextMarker" data-action="nextMarker"
+            title="Next Marker (CC 125)">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="13,12 2,5 2,19" />
+              <rect x="18" y="5" width="4" height="14" />
+            </svg>
+            <span>Next</span>
+          </button>
+          <button class="transport-btn save-btn" id="btnSave" data-action="save" title="Save Project (CC 126)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+              <polyline points="17,21 17,13 7,13 7,21" />
+              <polyline points="7,3 7,8 15,8" />
+            </svg>
+            <span>Save</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sliders Section -->
+    <section class="sliders-section">
+      <div class="section-header">
+        <h2 class="section-title">Faders</h2>
+        <span id="sliderCount">8 active</span>
+      </div>
+      <div class="sliders-grid" id="slidersGrid">
+        <!-- Sliders will be rendered here -->
+      </div>
+    </section>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <!-- MIDI Setup -->
+      <div class="card">
+        <h3 class="card-title">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="2" />
+            <circle cx="8" cy="12" r="2" />
+            <circle cx="16" cy="12" r="2" />
+          </svg>
+          MIDI Output
+        </h3>
+        <div class="midi-setup">
+          <div class="form-group">
+            <label class="form-label">Output Device</label>
+            <select class="form-select" id="midiOutputSelect">
+              <option value="">Select MIDI Output...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">MIDI Channel</label>
+            <select class="form-select" id="midiChannelSelect">
+              <option value="1">Channel 1</option>
+              <option value="2">Channel 2</option>
+              <option value="3">Channel 3</option>
+              <option value="4">Channel 4</option>
+              <option value="5">Channel 5</option>
+              <option value="6">Channel 6</option>
+              <option value="7">Channel 7</option>
+              <option value="8">Channel 8</option>
+              <option value="9">Channel 9</option>
+              <option value="10">Channel 10</option>
+              <option value="11">Channel 11</option>
+              <option value="12">Channel 12</option>
+              <option value="13">Channel 13</option>
+              <option value="14">Channel 14</option>
+              <option value="15">Channel 15</option>
+              <option value="16">Channel 16</option>
+            </select>
+          </div>
+          <button class="btn" id="refreshMidiBtn">Refresh MIDI Devices</button>
+        </div>
+      </div>
+
+      <!-- Phone Connection -->
+      <div class="card">
+        <h3 class="card-title">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <rect x="5" y="2" width="14" height="20" rx="2" />
+            <line x1="12" y1="18" x2="12" y2="18" />
+          </svg>
+          Phone Remote
+        </h3>
+        <div class="phone-connection">
+          <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
+            Enter this code on your phone to connect:
+          </p>
+          <div class="room-code generating" id="roomCode">----</div>
+          <div class="phone-url" id="phoneUrl">Loading...</div>
+          <div class="phone-status">
+            <span class="status-dot" id="phoneConnDot"></span>
+            <span id="phoneConnText">Waiting for connection...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slider Configuration -->
+      <div class="card slider-config" id="sliderConfigCard">
+        <h3 class="card-title">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+          Configure Slider
+        </h3>
+        <div class="config-grid">
+          <div class="form-group">
+            <label class="form-label">Label</label>
+            <input type="text" class="form-input" id="configLabel" placeholder="Slider name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">CC Number</label>
+            <input type="number" class="form-input" id="configCC" min="0" max="127" placeholder="1-127">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Color</label>
+            <input type="color" class="color-picker" id="configColor" value="#3b82f6">
+          </div>
+        </div>
+        <div style="margin-top: 16px; display: flex; gap: 8px;">
+          <button class="btn" id="saveConfigBtn">Save</button>
+          <button class="btn btn-secondary" id="cancelConfigBtn">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Activity Log -->
+      <div class="card">
+        <h3 class="card-title">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
+          Activity
+        </h3>
+        <div class="activity-log" id="activityLog">
+          <div class="log-entry">
+            <span class="log-time">--:--:--</span>
+            <span class="log-message">Waiting for MIDI...</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Setup Overlay (shown on first visit or if no MIDI) -->
+  <div class="setup-overlay" id="setupOverlay">
+    <div class="setup-modal">
+      <h2>Welcome! 🎛️</h2>
+      <p>Let's get you set up to control Logic Pro from your phone.</p>
+
+      <div class="setup-steps">
+        <div class="setup-step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>Enable IAC Driver</h3>
+            <p>Open <strong>Audio MIDI Setup</strong> → Window → Show MIDI Studio → Double-click <strong>IAC
+                Driver</strong> → Check "Device is online"</p>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3>Select MIDI Output</h3>
+            <p>Choose "IAC Driver" from the dropdown above to send MIDI to Logic Pro.</p>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3>Use MIDI Learn in Logic</h3>
+            <p>Right-click any control in Logic → Learn MIDI CC Assignment → Move a slider here!</p>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn" id="closeSetupBtn">Got it, let's go!</button>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/js/webmidi-controller.js"></script>
+  <script src="/js/webrtc-sync.js"></script>
+  <script>
+    // ==================== App State ====================
+    const state = {
+      midi: null,
+      sliders: null,
+      sync: null,
+      selectedSliderId: null,
+      midiChannel: 1,
+      activityLog: []
+    };
+
+    // ==================== DOM Elements ====================
+    const elements = {
+      slidersGrid: document.getElementById('slidersGrid'),
+      midiOutputSelect: document.getElementById('midiOutputSelect'),
+      midiChannelSelect: document.getElementById('midiChannelSelect'),
+      refreshMidiBtn: document.getElementById('refreshMidiBtn'),
+      midiStatus: document.getElementById('midiStatus'),
+      midiStatusText: document.getElementById('midiStatusText'),
+      phoneStatus: document.getElementById('phoneStatus'),
+      phoneStatusText: document.getElementById('phoneStatusText'),
+      roomCode: document.getElementById('roomCode'),
+      phoneUrl: document.getElementById('phoneUrl'),
+      phoneConnDot: document.getElementById('phoneConnDot'),
+      phoneConnText: document.getElementById('phoneConnText'),
+      sliderConfigCard: document.getElementById('sliderConfigCard'),
+      configLabel: document.getElementById('configLabel'),
+      configCC: document.getElementById('configCC'),
+      configColor: document.getElementById('configColor'),
+      saveConfigBtn: document.getElementById('saveConfigBtn'),
+      cancelConfigBtn: document.getElementById('cancelConfigBtn'),
+      activityLog: document.getElementById('activityLog'),
+      setupOverlay: document.getElementById('setupOverlay'),
+      closeSetupBtn: document.getElementById('closeSetupBtn'),
+      toastContainer: document.getElementById('toastContainer'),
+      sliderCount: document.getElementById('sliderCount')
+    };
+
+    // ==================== Initialize ====================
+    async function init() {
+      // Initialize MIDI
+      state.midi = new WebMIDIController();
+      state.sliders = new SliderManager(state.midi);
+
+      // Load saved config or use defaults
+      if (!state.sliders.loadFromStorage()) {
+        state.sliders.initSliders(10);
+      }
+
+      // Initialize WebMIDI
+      const midiReady = await state.midi.init();
+
+      if (midiReady) {
+        populateMidiOutputs();
+        updateMidiStatus(false);
+      } else {
+        showToast('WebMIDI not available. Please use Chrome.', 'error');
+      }
+
+      // Setup event handlers
+      state.midi.onStateChange = populateMidiOutputs;
+      state.midi.onError = (msg) => showToast(msg, 'error');
+
+      state.sliders.onChange = (slider) => {
+        updateSliderVisuals(slider);
+        logActivity(`CC ${slider.midiCC}: ${Math.round(slider.value * 127)}`);
+
+        // Sync to phone if connected
+        if (state.sync && state.sync.isConnected()) {
+          state.sync.sendSliderChange(slider.id, slider.value);
+        }
+      };
+
+      // Render sliders
+      renderSliders();
+
+      // Setup phone connection
+      initPhoneSync();
+
+      // Setup UI event listeners
+      setupEventListeners();
+
+      // Check if first visit
+      if (!localStorage.getItem('setupDismissed')) {
+        elements.setupOverlay.classList.add('visible');
+      }
+
+      // Update phone URL
+      updatePhoneUrl();
+    }
+
+    // ==================== MIDI Functions ====================
+    function populateMidiOutputs() {
+      const outputs = state.midi.outputs;
+      elements.midiOutputSelect.innerHTML = '<option value="">Select MIDI Output...</option>';
+
+      outputs.forEach(output => {
+        const option = document.createElement('option');
+        option.value = output.id;
+        option.textContent = output.name;
+        elements.midiOutputSelect.appendChild(option);
+      });
+
+      // Auto-select IAC Driver if available
+      const iac = outputs.find(o => o.name.toLowerCase().includes('iac'));
+      if (iac) {
+        elements.midiOutputSelect.value = iac.id;
+        state.midi.selectOutput(iac.id);
+        updateMidiStatus(true);
+        logActivity('Auto-selected IAC Driver');
+      }
+    }
+
+    function updateMidiStatus(connected) {
+      if (connected) {
+        elements.midiStatus.classList.add('connected');
+        elements.midiStatusText.textContent = `MIDI: ${state.midi.getSelectedOutputName()}`;
+      } else {
+        elements.midiStatus.classList.remove('connected');
+        elements.midiStatusText.textContent = 'MIDI: Not Connected';
+      }
+    }
+
+    // ==================== Slider Rendering ====================
+    function renderSliders() {
+      elements.slidersGrid.innerHTML = '';
+
+      const visibleSliders = state.sliders.getVisibleSliders();
+      elements.sliderCount.textContent = `${visibleSliders.length} active`;
+
+      visibleSliders.forEach(slider => {
+        const elem = createSliderElement(slider);
+        elements.slidersGrid.appendChild(elem);
+      });
+    }
+
+    function createSliderElement(slider) {
+      const container = document.createElement('div');
+      container.className = 'slider-container';
+      container.dataset.sliderId = slider.id;
+
+      container.innerHTML = `
+        <div class="slider-label">${slider.label}</div>
+        <div class="slider-track-vertical" data-slider-id="${slider.id}">
+          <div class="slider-fill-vertical" style="height: ${slider.value * 100}%; background: linear-gradient(to top, ${slider.color}, ${slider.color}80);"></div>
+          <div class="slider-thumb-vertical" style="bottom: ${slider.value * 100}%;"></div>
+        </div>
+        <div class="slider-value">${Math.round(slider.value * 127)}</div>
+        <div class="slider-cc">CC ${slider.midiCC}</div>
+      `;
+
+      // Touch/Mouse events for the track
+      const track = container.querySelector('.slider-track-vertical');
+      setupSliderEvents(track, slider);
+
+      // Double-click to configure
+      container.addEventListener('dblclick', () => openSliderConfig(slider));
+
+      return container;
+    }
+
+    function setupSliderEvents(track, slider) {
+      let isDragging = false;
+
+      const updateValue = (clientY) => {
+        const rect = track.getBoundingClientRect();
+        const y = clientY - rect.top;
+        const value = 1 - Math.max(0, Math.min(1, y / rect.height));
+        state.sliders.setValue(slider.id, value);
+      };
+
+      // Mouse events
+      track.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        updateValue(e.clientY);
+        document.body.style.cursor = 'grabbing';
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+          updateValue(e.clientY);
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isDragging) {
+          isDragging = false;
+          document.body.style.cursor = '';
+          state.sliders.saveToStorage();
+        }
+      });
+
+      // Touch events
+      track.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        isDragging = true;
+        updateValue(e.touches[0].clientY);
+      }, { passive: false });
+
+      track.addEventListener('touchmove', (e) => {
+        if (isDragging) {
+          e.preventDefault();
+          updateValue(e.touches[0].clientY);
+        }
+      }, { passive: false });
+
+      track.addEventListener('touchend', () => {
+        isDragging = false;
+        state.sliders.saveToStorage();
+      });
+    }
+
+    function updateSliderVisuals(slider) {
+      const container = document.querySelector(`.slider-container[data-slider-id="${slider.id}"]`);
+      if (!container) return;
+
+      const fill = container.querySelector('.slider-fill-vertical');
+      const thumb = container.querySelector('.slider-thumb-vertical');
+      const valueDisplay = container.querySelector('.slider-value');
+      const label = container.querySelector('.slider-label');
+      const ccDisplay = container.querySelector('.slider-cc');
+
+      fill.style.height = `${slider.value * 100}%`;
+      fill.style.background = `linear-gradient(to top, ${slider.color}, ${slider.color}80)`;
+      thumb.style.bottom = `${slider.value * 100}%`;
+      valueDisplay.textContent = Math.round(slider.value * 127);
+      label.textContent = slider.label;
+      ccDisplay.textContent = `CC ${slider.midiCC}`;
+    }
+
+    // ==================== Slider Configuration ====================
+    function openSliderConfig(slider) {
+      state.selectedSliderId = slider.id;
+      elements.configLabel.value = slider.label;
+      elements.configCC.value = slider.midiCC;
+      elements.configColor.value = slider.color;
+      elements.sliderConfigCard.classList.add('visible');
+    }
+
+    function closeSliderConfig() {
+      state.selectedSliderId = null;
+      elements.sliderConfigCard.classList.remove('visible');
+    }
+
+    function saveSliderConfig() {
+      if (!state.selectedSliderId) return;
+
+      state.sliders.updateConfig(state.selectedSliderId, {
+        label: elements.configLabel.value,
+        midiCC: parseInt(elements.configCC.value) || 1,
+        color: elements.configColor.value
+      });
+
+      const slider = state.sliders.sliders.find(s => s.id === state.selectedSliderId);
+      updateSliderVisuals(slider);
+      state.sliders.saveToStorage();
+      closeSliderConfig();
+      showToast('Slider updated!', 'success');
+    }
+
+    // ==================== Phone Sync ====================
+    async function initPhoneSync() {
+      state.sync = new RemoteSync();
+
+      state.sync.onConnectionChange = (connected) => {
+        if (connected) {
+          elements.phoneConnDot.classList.add('connected');
+          elements.phoneConnText.textContent = 'Phone connected!';
+          elements.phoneStatus.classList.add('connected');
+          elements.phoneStatusText.textContent = 'Phone: Connected';
+          showToast('Phone connected!', 'success');
+
+          // Send full state to phone
+          state.sync.sendFullState(state.sliders.sliders);
+        } else {
+          elements.phoneConnDot.classList.remove('connected');
+          elements.phoneConnText.textContent = 'Disconnected';
+          elements.phoneStatus.classList.remove('connected');
+          elements.phoneStatusText.textContent = 'Phone: Disconnected';
+        }
+      };
+
+      state.sync.onSliderChange = (id, value) => {
+        // Received slider change from phone
+        state.sliders.setValue(id, value);
+      };
+
+      // Handle transport messages from phone
+      state.sync.onTransport = (action, newState) => {
+        handleRemoteTransport(action, newState);
+      };
+
+      state.sync.onError = (msg) => {
+        showToast(msg, 'error');
+      };
+
+      try {
+        const roomCode = await state.sync.initAsHost();
+        elements.roomCode.textContent = roomCode;
+        elements.roomCode.classList.remove('generating');
+        logActivity(`Room code: ${roomCode}`);
+      } catch (err) {
+        elements.roomCode.textContent = 'ERROR';
+        elements.roomCode.classList.remove('generating');
+        showToast('Failed to create room: ' + err.message, 'error');
+      }
+    }
+
+    function updatePhoneUrl() {
+      const host = window.location.hostname || 'localhost';
+      const port = window.location.port || '8000';
+      const url = `http://${host}:${port}/mobile.html`;
+      elements.phoneUrl.textContent = url;
+    }
+
+    // ==================== Activity Log ====================
+    function logActivity(message) {
+      const now = new Date();
+      const time = now.toLocaleTimeString('en-US', { hour12: false });
+
+      state.activityLog.unshift({ time, message });
+      if (state.activityLog.length > 50) {
+        state.activityLog.pop();
+      }
+
+      renderActivityLog();
+    }
+
+    function renderActivityLog() {
+      elements.activityLog.innerHTML = state.activityLog.slice(0, 10).map(entry => `
+        <div class="log-entry">
+          <span class="log-time">${entry.time}</span>
+          <span class="log-message">${entry.message}</span>
+        </div>
+      `).join('');
+    }
+
+    // ==================== Toast Notifications ====================
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+
+      const icons = {
+        success: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+        error: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+        info: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+      };
+
+      toast.innerHTML = `${icons[type]}<span class="toast-message">${message}</span>`;
+      elements.toastContainer.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // ==================== Event Listeners ====================
+    function setupEventListeners() {
+      // MIDI output selection
+      elements.midiOutputSelect.addEventListener('change', (e) => {
+        if (e.target.value) {
+          state.midi.selectOutput(e.target.value);
+          updateMidiStatus(true);
+          logActivity(`Selected: ${state.midi.getSelectedOutputName()}`);
+          showToast('MIDI output connected!', 'success');
+        } else {
+          updateMidiStatus(false);
+        }
+      });
+
+      // MIDI channel selection
+      elements.midiChannelSelect.addEventListener('change', (e) => {
+        state.midiChannel = parseInt(e.target.value);
+        state.sliders.sliders.forEach(s => s.midiChannel = state.midiChannel);
+        state.sliders.saveToStorage();
+        logActivity(`MIDI Channel: ${state.midiChannel}`);
+      });
+
+      // Refresh MIDI
+      elements.refreshMidiBtn.addEventListener('click', () => {
+        state.midi.refreshOutputs();
+        populateMidiOutputs();
+        showToast('MIDI devices refreshed', 'info');
+      });
+
+      // Config buttons
+      elements.saveConfigBtn.addEventListener('click', saveSliderConfig);
+      elements.cancelConfigBtn.addEventListener('click', closeSliderConfig);
+
+      // Setup overlay
+      elements.closeSetupBtn.addEventListener('click', () => {
+        elements.setupOverlay.classList.remove('visible');
+        localStorage.setItem('setupDismissed', 'true');
+      });
+
+      // Close config on escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeSliderConfig();
+        }
+      });
+
+      // ==================== Transport Controls ====================
+      setupTransportControls();
+    }
+
+    // Transport control state and configuration
+    const transportConfig = {
+      // These CC numbers are chosen to avoid conflicts with common instrument CCs
+      // Users can MIDI Learn these in Logic Pro
+      record: { cc: 116, note: null, toggle: true },
+      play: { cc: 117, note: null, toggle: false },
+      stop: { cc: 118, note: null, toggle: false },
+      rewind: { cc: 119, note: null, toggle: false },
+      undo: { cc: 120, note: null, toggle: false },
+      loop: { cc: 121, note: null, toggle: true },
+      click: { cc: 122, note: null, toggle: true },
+      marker: { cc: 123, note: null, toggle: false },
+      prevMarker: { cc: 124, note: null, toggle: false },
+      nextMarker: { cc: 125, note: null, toggle: false },
+      save: { cc: 126, note: null, toggle: false }
+    };
+
+    const transportState = {
+      record: false,
+      loop: false,
+      click: false
+    };
+
+    function setupTransportControls() {
+      // Get all transport buttons
+      const transportButtons = document.querySelectorAll('.transport-btn');
+
+      transportButtons.forEach(btn => {
+        const action = btn.dataset.action;
+        if (!action || !transportConfig[action]) return;
+
+        btn.addEventListener('click', () => {
+          handleTransportAction(action, btn);
+        });
+
+        // Touch feedback
+        btn.addEventListener('touchstart', () => {
+          btn.classList.add('pressed');
+        }, { passive: true });
+
+        btn.addEventListener('touchend', () => {
+          btn.classList.remove('pressed');
+        }, { passive: true });
+      });
+    }
+
+    function handleTransportAction(action, btn) {
+      const config = transportConfig[action];
+      if (!config) return;
+
+      // Handle toggle buttons
+      if (config.toggle) {
+        transportState[action] = !transportState[action];
+        btn.classList.toggle('active', transportState[action]);
+      } else {
+        // Momentary button - flash active state
+        btn.classList.add('active');
+        setTimeout(() => btn.classList.remove('active'), 150);
+      }
+
+      // Send MIDI
+      if (config.cc !== null) {
+        const value = config.toggle ? (transportState[action] ? 127 : 0) : 127;
+        state.midi.sendCC(state.midiChannel, config.cc, value);
+
+        // For momentary buttons, send note off after a brief delay
+        if (!config.toggle) {
+          setTimeout(() => {
+            state.midi.sendCC(state.midiChannel, config.cc, 0);
+          }, 50);
+        }
+      }
+
+      // Log the action
+      const actionNames = {
+        record: transportState.record ? 'Record ON' : 'Record OFF',
+        play: 'Play',
+        stop: 'Stop',
+        rewind: 'Return to Zero',
+        undo: 'Undo',
+        loop: transportState.loop ? 'Loop ON' : 'Loop OFF',
+        click: transportState.click ? 'Click ON' : 'Click OFF',
+        marker: 'Drop Marker',
+        prevMarker: 'Previous Marker',
+        nextMarker: 'Next Marker',
+        save: 'Save Project'
+      };
+
+      logActivity(`${actionNames[action]} (CC ${config.cc})`);
+
+      // Sync to phone if connected
+      if (state.sync && state.sync.isConnected()) {
+        state.sync.send({
+          type: 'transport',
+          action: action,
+          state: transportState[action] || false
+        });
+      }
+    }
+
+    // Handle transport from phone
+    function handleRemoteTransport(action, newState) {
+      const btn = document.querySelector(`[data-action="${action}"]`);
+      if (!btn) return;
+
+      const config = transportConfig[action];
+      if (config && config.toggle) {
+        transportState[action] = newState;
+        btn.classList.toggle('active', newState);
+      }
+
+      // Send MIDI
+      if (config && config.cc !== null) {
+        const value = config.toggle ? (newState ? 127 : 0) : 127;
+        state.midi.sendCC(state.midiChannel, config.cc, value);
+
+        if (!config.toggle) {
+          setTimeout(() => {
+            state.midi.sendCC(state.midiChannel, config.cc, 0);
+          }, 50);
+        }
+      }
+
+      logActivity(`Remote: ${action}`);
+    }
+
+    // ==================== Start App ====================
+    init();
+  </script>
+</body>
+
+</html>

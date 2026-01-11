@@ -1,0 +1,244 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: #1a1a1a;
+  color: #ffffff;
+  overflow-x: hidden;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.mobile-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-header {
+  background: #2a2a2a;
+  padding: 15px;
+  border-bottom: 2px solid #3a3a3a;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.connection-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 8px currentColor;
+  animation: pulse 2s infinite;
+}
+
+.status-dot.connected {
+  background: #22c55e;
+  animation: none;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.server-info {
+  font-size: 11px;
+  color: #9ca3af;
+  font-family: monospace;
+}
+
+.sliders-container {
+  flex: 1;
+  padding: 20px 15px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+}
+
+.empty-state h2 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #9ca3af;
+}
+
+.empty-state p {
+  font-size: 14px;
+}
+
+/* Portrait Mode (default) */
+.mobile-slider {
+  background: #2a2a2a;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 15px;
+  border-left: 4px solid;
+  transition: all 0.2s ease;
+  touch-action: none;
+}
+
+.mobile-slider.flash {
+  background: #3a3a3a;
+}
+
+.slider-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.slider-label {
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.slider-track-mobile {
+  position: relative;
+  width: 100%;
+  height: 60px;
+  background: #1a1a1a;
+  border-radius: 30px;
+  overflow: hidden;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.slider-fill-mobile {
+  height: 100%;
+  border-radius: 30px;
+  pointer-events: none;
+  transition: width 0.05s ease;
+}
+
+.slider-thumb-mobile {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  pointer-events: none;
+  transition: left 0.05s ease;
+}
+
+/* Landscape Mode */
+@media (orientation: landscape) {
+  .sliders-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .mobile-slider {
+    margin-bottom: 0;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .slider-info {
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .slider-label {
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .slider-track-mobile {
+    flex: 1;
+    height: auto;
+    min-height: 100px;
+    width: 60px;
+    margin: 0 auto;
+  }
+
+  .slider-fill-mobile {
+    width: 100%;
+    height: 0%;
+  }
+
+  .slider-thumb-mobile {
+    left: 50%;
+    top: auto;
+    bottom: 0;
+    transform: translate(-50%, 50%);
+  }
+}
+
+/* Large phones / small tablets in portrait */
+@media (min-width: 400px) and (orientation: portrait) {
+  .slider-label {
+    font-size: 20px;
+  }
+
+  .slider-track-mobile {
+    height: 70px;
+  }
+
+  .slider-thumb-mobile {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+/* Tablets in landscape */
+@media (min-width: 768px) and (orientation: landscape) {
+  .sliders-container {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .slider-track-mobile {
+    min-height: 150px;
+    width: 70px;
+  }
+}
+
+/* Prevent text selection and context menus during dragging */
+.slider-track-mobile:active {
+  cursor: grabbing;
+}
+
+/* iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+  .slider-track-mobile {
+    -webkit-touch-callout: none;
+  }
+}

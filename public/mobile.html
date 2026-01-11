@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>MIDI Remote</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0f0f0f;
+      --bg-secondary: #1a1a1a;
+      --bg-tertiary: #252525;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0a0;
+      --text-muted: #666666;
+      --accent-blue: #3b82f6;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .app {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Connection Screen */
+    .connect-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .connect-screen.hidden {
+      display: none;
+    }
+
+    .connect-logo {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent-blue), #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .connect-subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 40px;
+    }
+
+    .connect-form {
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .connect-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .code-input {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .code-input input {
+      width: 56px;
+      height: 64px;
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 28px;
+      font-weight: 700;
+      text-align: center;
+      text-transform: uppercase;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .code-input input:focus {
+      border-color: var(--accent-blue);
+    }
+
+    .connect-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent-blue);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .connect-btn:hover {
+      filter: brightness(1.1);
+    }
+
+    .connect-btn:disabled {
+      background: var(--bg-tertiary);
+      color: var(--text-muted);
+      cursor: not-allowed;
+    }
+
+    .connect-status {
+      margin-top: 20px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .connect-status.error {
+      color: var(--accent-red);
+    }
+
+    /* Control Screen */
+    .control-screen {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+    }
+
+    .control-screen.visible {
+      display: flex;
+    }
+
+    /* Header */
+    .header {
+      background: var(--bg-secondary);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .header-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+
+    /* Transport Bar */
+    .transport-bar {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+    }
+
+    .transport-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      border: 2px solid var(--border-color);
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .transport-btn svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .transport-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Record */
+    .transport-btn.record-btn {
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .transport-btn.record-btn svg {
+      color: #ef4444;
+    }
+
+    .transport-btn.record-btn.active {
+      background: #ef4444;
+      border-color: #ef4444;
+      animation: recordPulse 1s infinite;
+    }
+
+    .transport-btn.record-btn.active svg {
+      color: white;
+    }
+
+    @keyframes recordPulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+      }
+
+      50% {
+        box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+      }
+    }
+
+    /* Play */
+    .transport-btn.play-btn {
+      border-color: rgba(34, 197, 94, 0.4);
+    }
+
+    .transport-btn.play-btn svg {
+      color: #22c55e;
+    }
+
+    .transport-btn.play-btn.active {
+      background: #22c55e;
+      border-color: #22c55e;
+    }
+
+    .transport-btn.play-btn.active svg {
+      color: white;
+    }
+
+    /* Stop */
+    .transport-btn.stop-btn {
+      border-color: rgba(251, 191, 36, 0.4);
+    }
+
+    .transport-btn.stop-btn svg {
+      color: #fbbf24;
+    }
+
+    /* Rewind */
+    .transport-btn.rewind-btn svg {
+      color: #3b82f6;
+    }
+
+    /* Undo */
+    .transport-btn.undo-btn svg {
+      color: #f97316;
+    }
+
+    /* Toggle buttons (Loop, Click) */
+    .transport-btn.toggle-btn.active {
+      background: #8b5cf6;
+      border-color: #8b5cf6;
+    }
+
+    .transport-btn.toggle-btn.active svg {
+      color: white;
+    }
+
+    /* Sliders Container */
+    .sliders-container {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    /* Portrait: Horizontal sliders */
+    .sliders-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .slider-item {
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      padding: 16px;
+      border-left: 4px solid;
+    }
+
+    .slider-item.active {
+      background: var(--bg-tertiary);
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .slider-label {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .slider-value {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      font-variant-numeric: tabular-nums;
+      min-width: 32px;
+      text-align: right;
+    }
+
+    .slider-track {
+      width: 100%;
+      height: 52px;
+      background: var(--bg-primary);
+      border-radius: 26px;
+      position: relative;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .slider-fill {
+      height: 100%;
+      border-radius: 26px;
+      transition: width 0.05s ease;
+    }
+
+    .slider-thumb {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 44px;
+      height: 44px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      transition: left 0.05s ease;
+      pointer-events: none;
+    }
+
+    /* Landscape: Vertical sliders grid */
+    @media (orientation: landscape) {
+      .sliders-container {
+        padding: 12px;
+      }
+
+      .sliders-list {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 12px;
+        height: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+
+      .slider-item {
+        flex-shrink: 0;
+        width: 100px;
+        height: 100%;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        border-left: none;
+        border-bottom: 4px solid;
+      }
+
+      .slider-header {
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .slider-label {
+        font-size: 12px;
+        text-align: center;
+        margin-bottom: 4px;
+      }
+
+      .slider-track {
+        flex: 1;
+        width: 52px;
+        height: auto;
+        margin: 0 auto;
+      }
+
+      .slider-fill {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100% !important;
+        height: 0;
+        transition: height 0.05s ease;
+      }
+
+      .slider-thumb {
+        left: 50% !important;
+        bottom: 0;
+        top: auto;
+        transform: translate(-50%, 50%);
+        transition: bottom 0.05s ease;
+      }
+    }
+
+    /* Haptic feedback visual indicator */
+    .slider-item.haptic {
+      animation: hapticPulse 0.1s ease;
+    }
+
+    @keyframes hapticPulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(0.98);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <!-- Connection Screen -->
+    <div class="connect-screen" id="connectScreen">
+      <div class="connect-logo">MIDI Remote</div>
+      <div class="connect-subtitle">Control Logic Pro from your phone</div>
+
+      <div class="connect-form">
+        <label class="connect-label">Enter the 4-letter code from your Mac:</label>
+        <div class="code-input" id="codeInput">
+          <input type="text" maxlength="1" data-index="0" autocomplete="off" autocapitalize="characters">
+          <input type="text" maxlength="1" data-index="1" autocomplete="off" autocapitalize="characters">
+          <input type="text" maxlength="1" data-index="2" autocomplete="off" autocapitalize="characters">
+          <input type="text" maxlength="1" data-index="3" autocomplete="off" autocapitalize="characters">
+        </div>
+        <button class="connect-btn" id="connectBtn" disabled>Connect</button>
+        <div class="connect-status" id="connectStatus"></div>
+      </div>
+    </div>
+
+    <!-- Control Screen -->
+    <div class="control-screen" id="controlScreen">
+      <header class="header">
+        <div class="header-title">MIDI Remote</div>
+        <div class="status-badge">
+          <span class="status-dot"></span>
+          <span>Connected</span>
+        </div>
+      </header>
+
+      <!-- Transport Controls -->
+      <div class="transport-bar" id="transportBar">
+        <button class="transport-btn record-btn" data-action="record">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="12" r="8" />
+          </svg>
+        </button>
+        <button class="transport-btn play-btn" data-action="play">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5,3 19,12 5,21" />
+          </svg>
+        </button>
+        <button class="transport-btn stop-btn" data-action="stop">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <rect x="4" y="4" width="16" height="16" rx="2" />
+          </svg>
+        </button>
+        <button class="transport-btn rewind-btn" data-action="rewind">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M11 18V6l-8 6 8 6zm.5-6l8 6V6l-8 6z" />
+          </svg>
+        </button>
+        <button class="transport-btn undo-btn" data-action="undo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M3 10h10a5 5 0 0 1 5 5v2" />
+            <polyline points="3,10 7,6" />
+            <polyline points="3,10 7,14" />
+          </svg>
+        </button>
+        <button class="transport-btn toggle-btn" data-action="loop">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M17 2l4 4-4 4" />
+            <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
+            <path d="M7 22l-4-4 4-4" />
+            <path d="M21 13v1a4 4 0 0 1-4 4H3" />
+          </svg>
+        </button>
+        <button class="transport-btn toggle-btn" data-action="click">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 1.5l-8 10v11h16v-11l-8-10zM12 4.5l5.5 7H6.5l5.5-7zM6 20v-6h12v6H6z" />
+            <rect x="11" y="6" width="2" height="8" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="sliders-container">
+        <div class="sliders-list" id="slidersList">
+          <!-- Sliders rendered here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/webrtc-sync.js"></script>
+  <script>
+    // ==================== State ====================
+    const state = {
+      sync: null,
+      sliders: [],
+      activeSlider: null
+    };
+
+    // ==================== DOM Elements ====================
+    const elements = {
+      connectScreen: document.getElementById('connectScreen'),
+      controlScreen: document.getElementById('controlScreen'),
+      codeInput: document.getElementById('codeInput'),
+      connectBtn: document.getElementById('connectBtn'),
+      connectStatus: document.getElementById('connectStatus'),
+      slidersList: document.getElementById('slidersList')
+    };
+
+    // ==================== Code Input Handling ====================
+    function setupCodeInput() {
+      const inputs = elements.codeInput.querySelectorAll('input');
+
+      inputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+          const value = e.target.value.toUpperCase();
+          e.target.value = value;
+
+          if (value && index < 3) {
+            inputs[index + 1].focus();
+          }
+
+          checkCodeComplete();
+        });
+
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && !e.target.value && index > 0) {
+            inputs[index - 1].focus();
+          }
+        });
+
+        input.addEventListener('paste', (e) => {
+          e.preventDefault();
+          const paste = (e.clipboardData || window.clipboardData).getData('text').toUpperCase();
+
+          for (let i = 0; i < 4 && i < paste.length; i++) {
+            inputs[i].value = paste[i];
+          }
+
+          checkCodeComplete();
+          if (paste.length >= 4) {
+            inputs[3].focus();
+          }
+        });
+      });
+    }
+
+    function checkCodeComplete() {
+      const inputs = elements.codeInput.querySelectorAll('input');
+      const code = Array.from(inputs).map(i => i.value).join('');
+      elements.connectBtn.disabled = code.length !== 4;
+    }
+
+    function getCode() {
+      const inputs = elements.codeInput.querySelectorAll('input');
+      return Array.from(inputs).map(i => i.value).join('').toUpperCase();
+    }
+
+    // ==================== Connection ====================
+    async function connect() {
+      const code = getCode();
+      if (code.length !== 4) return;
+
+      elements.connectBtn.disabled = true;
+      elements.connectBtn.textContent = 'Connecting...';
+      elements.connectStatus.textContent = '';
+      elements.connectStatus.classList.remove('error');
+
+      state.sync = new RemoteSync();
+
+      state.sync.onFullState = (sliders) => {
+        state.sliders = sliders;
+        renderSliders();
+      };
+
+      state.sync.onSliderChange = (id, value) => {
+        const slider = state.sliders.find(s => s.id === id);
+        if (slider) {
+          slider.value = value;
+          updateSliderVisuals(slider);
+        }
+      };
+
+      state.sync.onConnectionChange = (connected) => {
+        if (!connected) {
+          showConnectionScreen();
+          elements.connectStatus.textContent = 'Connection lost. Please reconnect.';
+          elements.connectStatus.classList.add('error');
+        }
+      };
+
+      state.sync.onError = (msg) => {
+        elements.connectStatus.textContent = msg;
+        elements.connectStatus.classList.add('error');
+        elements.connectBtn.disabled = false;
+        elements.connectBtn.textContent = 'Connect';
+      };
+
+      try {
+        await state.sync.initAsClient(code);
+        showControlScreen();
+      } catch (err) {
+        elements.connectStatus.textContent = err.message || 'Failed to connect';
+        elements.connectStatus.classList.add('error');
+        elements.connectBtn.disabled = false;
+        elements.connectBtn.textContent = 'Connect';
+      }
+    }
+
+    function showConnectionScreen() {
+      elements.connectScreen.classList.remove('hidden');
+      elements.controlScreen.classList.remove('visible');
+      elements.connectBtn.disabled = false;
+      elements.connectBtn.textContent = 'Connect';
+    }
+
+    function showControlScreen() {
+      elements.connectScreen.classList.add('hidden');
+      elements.controlScreen.classList.add('visible');
+    }
+
+    // ==================== Slider Rendering ====================
+    function renderSliders() {
+      const visibleSliders = state.sliders.filter(s => s.visible);
+
+      elements.slidersList.innerHTML = visibleSliders.map(slider => `
+        <div class="slider-item" style="border-color: ${slider.color};" data-slider-id="${slider.id}">
+          <div class="slider-header">
+            <span class="slider-label">${slider.label}</span>
+            <span class="slider-value">${Math.round(slider.value * 127)}</span>
+          </div>
+          <div class="slider-track" data-slider-id="${slider.id}">
+            <div class="slider-fill" style="width: ${slider.value * 100}%; background: ${slider.color};"></div>
+            <div class="slider-thumb" style="left: ${slider.value * 100}%;"></div>
+          </div>
+        </div>
+      `).join('');
+
+      // Setup touch events
+      const tracks = elements.slidersList.querySelectorAll('.slider-track');
+      tracks.forEach(track => setupSliderEvents(track));
+    }
+
+    function updateSliderVisuals(slider) {
+      const item = document.querySelector(`.slider-item[data-slider-id="${slider.id}"]`);
+      if (!item) return;
+
+      const fill = item.querySelector('.slider-fill');
+      const thumb = item.querySelector('.slider-thumb');
+      const valueDisplay = item.querySelector('.slider-value');
+      const isLandscape = window.innerWidth > window.innerHeight;
+
+      if (isLandscape) {
+        fill.style.height = `${slider.value * 100}%`;
+        fill.style.width = '100%';
+        thumb.style.bottom = `${slider.value * 100}%`;
+      } else {
+        fill.style.width = `${slider.value * 100}%`;
+        thumb.style.left = `${slider.value * 100}%`;
+      }
+
+      valueDisplay.textContent = Math.round(slider.value * 127);
+    }
+
+    function setupSliderEvents(track) {
+      const sliderId = parseInt(track.dataset.sliderId);
+      let isDragging = false;
+
+      const updateValue = (clientX, clientY) => {
+        const slider = state.sliders.find(s => s.id === sliderId);
+        if (!slider) return;
+
+        const rect = track.getBoundingClientRect();
+        const isLandscape = window.innerWidth > window.innerHeight;
+        let value;
+
+        if (isLandscape) {
+          const y = clientY - rect.top;
+          value = 1 - Math.max(0, Math.min(1, y / rect.height));
+        } else {
+          const x = clientX - rect.left;
+          value = Math.max(0, Math.min(1, x / rect.width));
+        }
+
+        slider.value = value;
+        updateSliderVisuals(slider);
+
+        // Send to Mac
+        if (state.sync && state.sync.isConnected()) {
+          state.sync.sendSliderChange(sliderId, value);
+        }
+      };
+
+      // Touch events
+      track.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        isDragging = true;
+        const touch = e.touches[0];
+        updateValue(touch.clientX, touch.clientY);
+
+        // Haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate(10);
+        }
+      }, { passive: false });
+
+      track.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        updateValue(touch.clientX, touch.clientY);
+      }, { passive: false });
+
+      track.addEventListener('touchend', () => {
+        isDragging = false;
+      });
+
+      // Mouse events for testing
+      track.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        updateValue(e.clientX, e.clientY);
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        updateValue(e.clientX, e.clientY);
+      });
+
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+    }
+
+    // ==================== Orientation Change ====================
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        state.sliders.forEach(slider => {
+          if (slider.visible) {
+            updateSliderVisuals(slider);
+          }
+        });
+      }, 100);
+    });
+
+    // ==================== Initialize ====================
+    setupCodeInput();
+    elements.connectBtn.addEventListener('click', connect);
+    setupTransportControls();
+
+    // Focus first input
+    elements.codeInput.querySelector('input').focus();
+
+    // ==================== Transport Controls ====================
+    const transportState = {
+      record: false,
+      loop: false,
+      click: false
+    };
+
+    function setupTransportControls() {
+      const transportButtons = document.querySelectorAll('.transport-btn');
+
+      transportButtons.forEach(btn => {
+        const action = btn.dataset.action;
+        if (!action) return;
+
+        btn.addEventListener('click', () => {
+          handleTransportAction(action, btn);
+        });
+
+        // Prevent double-tap zoom
+        btn.addEventListener('touchend', (e) => {
+          e.preventDefault();
+        });
+      });
+    }
+
+    function handleTransportAction(action, btn) {
+      const toggleActions = ['record', 'loop', 'click'];
+      const isToggle = toggleActions.includes(action);
+
+      if (isToggle) {
+        transportState[action] = !transportState[action];
+        btn.classList.toggle('active', transportState[action]);
+      } else {
+        // Momentary flash
+        btn.classList.add('active');
+        setTimeout(() => btn.classList.remove('active'), 150);
+      }
+
+      // Haptic feedback
+      if (navigator.vibrate) {
+        navigator.vibrate(isToggle ? 20 : 10);
+      }
+
+      // Send to Mac
+      if (state.sync && state.sync.isConnected()) {
+        state.sync.send({
+          type: 'transport',
+          action: action,
+          state: transportState[action] || false
+        });
+      }
+    }
+
+    // Handle transport state from Mac
+    function updateTransportState(action, newState) {
+      const btn = document.querySelector(`[data-action="${action}"]`);
+      if (btn) {
+        transportState[action] = newState;
+        btn.classList.toggle('active', newState);
+      }
+    }
+  </script>
+</body>
+
+</html>
