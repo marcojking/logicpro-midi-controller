@@ -634,6 +634,7 @@
       state.sync = new RemoteSync();
 
       state.sync.onFullState = (sliders) => {
+        console.log('[Mobile] Received full state:', sliders.length, 'sliders');
         state.sliders = sliders;
         renderSliders();
       };
@@ -647,7 +648,12 @@
       };
 
       state.sync.onConnectionChange = (connected) => {
-        if (!connected) {
+        console.log('[Mobile] Connection changed:', connected);
+        if (connected) {
+          // Connection successful - show control screen
+          console.log('[Mobile] Showing control screen');
+          showControlScreen();
+        } else {
           showConnectionScreen();
           elements.connectStatus.textContent = 'Connection lost. Please reconnect.';
           elements.connectStatus.classList.add('error');
@@ -655,6 +661,7 @@
       };
 
       state.sync.onError = (msg) => {
+        console.error('[Mobile] Error:', msg);
         elements.connectStatus.textContent = msg;
         elements.connectStatus.classList.add('error');
         elements.connectBtn.disabled = false;
@@ -662,9 +669,13 @@
       };
 
       try {
+        console.log('[Mobile] Connecting to:', code);
         await state.sync.initAsClient(code);
+        console.log('[Mobile] initAsClient resolved!');
+        // Also show control screen here as backup
         showControlScreen();
       } catch (err) {
+        console.error('[Mobile] Connection failed:', err);
         elements.connectStatus.textContent = err.message || 'Failed to connect';
         elements.connectStatus.classList.add('error');
         elements.connectBtn.disabled = false;
